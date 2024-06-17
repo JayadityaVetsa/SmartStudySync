@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.timemanagement"
-        minSdk = 26
+        minSdk = 30
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.firebase.auth)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.activity.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,8 +74,14 @@ dependencies {
     implementation(libs.google.firebase.auth)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
     implementation("com.google.ai.client.generativeai:generativeai:0.6.0")
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.ui.v140)
+    implementation(libs.androidx.material.v140)
+    implementation(libs.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose.v172)
+    implementation(libs.androidx.lifecycle.runtime.ktx.v282)
+    implementation(libs.androidx.foundation)
+    implementation(libs.coil.compose.v240)
+    implementation(libs.firebase.vertexai)
 
-    val nav_version = "2.7.7"
-
-    implementation("androidx.navigation:navigation-compose:$nav_version")
 }

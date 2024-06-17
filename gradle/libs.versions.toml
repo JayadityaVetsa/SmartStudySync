@@ -1,6 +1,14 @@
 [versions]
-agp = "8.4.2"
+activityComposeVersion = "1.9.0"
+activityKtxVersion = "1.8.2"
+agp = "8.5.0"
+androidxActivityCompose = "1.7.2"
+androidxMaterial = "1.4.0"
+coilCompose = "<version>"
+coilComposeVersion = "2.4.0"
 firebaseBom = "33.1.0"
+firebaseVertexai = "16.0.0-beta01"
+foundation = "1.6.8"
 kotlin = "1.9.0"
 coreKtx = "1.12.0"
 junit = "4.13.2"
@@ -11,11 +19,31 @@ activityCompose = "1.8.2"
 composeBom = "2023.08.00"
 googleGmsGoogleServices = "4.4.2"
 firebaseAuth = "23.0.0"
+lifecycleRuntimeKtxVersion = "2.8.2"
+material = "1.5.4"
+activityKtx = "1.9.0"
+materialVersion = "1.6.8"
+navigationCompose = "2.7.7"
+ui = "1.6.8"
+uiToolingPreview = "1.6.8"
+uiVersion = "1.4.0"
 
 [libraries]
+androidx-activity-compose-v172 = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
+androidx-activity-compose-v190 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
+androidx-activity-ktx-v182 = { module = "androidx.activity:activity-ktx", version.ref = "activityKtxVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
+androidx-lifecycle-runtime-ktx-v282 = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtxVersion" }
+androidx-material-v140 = { module = "androidx.compose.material:material", version.ref = "androidxMaterial" }
+androidx-material-v168 = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-ui-v140 = { module = "androidx.compose.ui:ui", version.ref = "uiVersion" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+coil-compose-v240 = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-vertexai = { module = "com.google.firebase:firebase-vertexai", version.ref = "firebaseVertexai" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -31,6 +59,10 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "material" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

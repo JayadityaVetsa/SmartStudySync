@@ -39,36 +39,6 @@ fun HomePage(navController: NavController){
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 16.dp)
         )
-
-        // Spacer to push the button to the middle of the screen
-//        Spacer(modifier = Modifier.weight(1f))
-//
-//        // Button centered vertically
-//        Button(
-//            onClick = { navController.navigate(Routes.ChatPage) },
-//            modifier = Modifier.align(Alignment.CenterHorizontally)
-//        ) {
-//            Text(text = "Chat")
-//        }
-//        Spacer(modifier = Modifier.weight(0.5f)) // Reduced weight for tighter spacing
-//
-//        Button(
-//            onClick = { navController.navigate(Routes.HomeworkHelperPage) },
-//            modifier = Modifier.align(Alignment.CenterHorizontally)
-//        ) {
-//            Text(text = "Homework Helper")
-//        }
-//
-//        Spacer(modifier = Modifier.weight(0.5f)) // Reduced weight for tighter spacing
-//
-//        Button(
-//            onClick = { navController.navigate(Routes.AutomaticQuizMakerPage) },
-//            modifier = Modifier.align(Alignment.CenterHorizontally)
-//        ) {
-//            Text(text = "Automatic Quiz Maker")
-//        }
-//
-//        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
