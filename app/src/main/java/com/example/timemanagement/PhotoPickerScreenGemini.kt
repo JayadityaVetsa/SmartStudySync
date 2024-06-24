@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -45,7 +46,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoPickerScreenGemini(
-    viewModel: SimpleChatViewModelGemini = viewModel(factory = SimpleChatViewModelFactoryGemini(Constants.apiKeyImage, "gemini-1.5-flash-001"))
+    systemInstructions: String,
+    viewModel: SimpleChatViewModelGemini = viewModel(factory = SimpleChatViewModelFactoryGemini(Constants.apiKeyImage, "gemini-1.5-flash-001", systemInstructions))
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var textFieldValue by remember { mutableStateOf("") }
@@ -134,7 +136,9 @@ fun PhotoPickerScreenGemini(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(text = "Response: $response")
+        SelectionContainer {
+            Text(text = "Response: $response")
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -142,14 +146,16 @@ fun PhotoPickerScreenGemini(
 
 class SimpleChatViewModelFactoryGemini(
     private val apiKey: String,
-    private val model: String
+    private val model: String,
+    private val systemInstructions: String
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SimpleChatViewModelGemini::class.java)) {
             val generativeModel : GenerativeModel = GenerativeModel(
                 modelName = model,
-                apiKey = apiKey
+                apiKey = apiKey,
+                systemInstruction = content { text(systemInstructions) },
             )
             return SimpleChatViewModelGemini(generativeModel) as T
         }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider
 import com.example.timemanagement.ui.theme.TimeManagementTheme
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
         val chatViewModel = ViewModelProvider(this)[ChatViewModel::class.java]
         setContent {
             TimeManagementTheme {
+                FirebaseApp.initializeApp(this)
                 AuthScreenSetup(chatViewModel)
             }
         }

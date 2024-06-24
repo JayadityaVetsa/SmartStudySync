@@ -5,4 +5,6 @@ object Routes {
     var ChatPage = "ChatPage"
     var HomeworkHelperPage = "HomeworkHelperPage"
     var AutomaticQuizMakerPage = "AutomaticQuizMakerPage"
+    var PhotoScreenPage = "PhotoScreenPage"
+    var SettingsPage = "SettingsPage"
 }

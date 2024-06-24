@@ -1,7 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    alias(libs.plugins.googleGmsGoogleServices) }
+    alias(libs.plugins.googleGmsGoogleServices)
+    kotlin("plugin.serialization") version "2.0.0"
+}
 
 android {
     namespace = "com.example.timemanagement"
@@ -62,6 +64,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.androidx.material)
     implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.media3.common)
+    implementation(libs.places)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -83,5 +87,12 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.coil.compose.v240)
     implementation(libs.firebase.vertexai)
-
+    implementation("androidx.compose.foundation:foundation:1.1.0-alpha05")
+    implementation("androidx.compose.material:material:1.1.0-alpha05")
+    implementation("androidx.compose.ui:ui:1.1.0-alpha05")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.1.0-alpha05")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
+    implementation("com.google.accompanist:accompanist-pager:0.20.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }

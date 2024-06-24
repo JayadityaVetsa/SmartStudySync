@@ -3,11 +3,7 @@ package com.example.timemanagement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -135,6 +131,21 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                         modifier = Modifier.size(26.dp)
                     )
                 }
+
+                IconButton(
+                    onClick = {
+                        selected.value = 4
+                        navController.navigate(Routes.SettingsPage){
+                            popUpTo(0)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)) {
+                    Icon(
+                        painterResource(R.drawable.baseline_settings_24),
+                        contentDescription = "Settings",
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
             }
         }
     ){ paddingValues ->
@@ -153,10 +164,15 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                     HomeworkHelperPage()
                 }
                 composable(Routes.AutomaticQuizMakerPage) {
-                    AutomaticQuizMakerPage()
+                    AutomaticQuizMakerPage(navController)
+                }
+                composable(Routes.PhotoScreenPage) {
+                    PhotoScreenPage()
+                }
+                composable(Routes.SettingsPage) {
+                    SettingsPage()
                 }
             }
         )
     }
 }
-

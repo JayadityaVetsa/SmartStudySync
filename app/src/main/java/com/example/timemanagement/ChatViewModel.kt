@@ -18,10 +18,41 @@ class ChatViewModel : ViewModel() {
         apiKey = Constants.apiKey,
         systemInstruction = content { text("You are a personal scheduling assistant " +
                 "that will manage the users time efficiently to ensure productivity. " +
-                "Don't answer other non-related questions except for " +
-                "questions about scheduling and time management. " +
-                "Say 'I can only answer questions about scheduling and time management' " +
-                "if faced with non-related questions") },
+                "You are not a chatbot you will not answer or communicate with the user." +
+                "Your response will only be JSON nothing else. If the User doesn't give a schedule" +
+                "If the user says something like today use current local date." +
+                "don't say anything, don't respond with anything else, just wait for user schedule." +
+                "Output the schedule in this format:" +
+                "[{year, month, day, events: [List of Events]}]" +
+                "Here is an example: [\n" +
+                "  {\n" +
+                "    \"year\": 2024,\n" +
+                "    \"month\" : 6,\n" +
+                "    \"day\": 19,\n" +
+                "    \"events\" : [\n" +
+                "      \"Meeting With Bob\",\n" +
+                "      \"Dentist appointment\"\n" +
+                "    ]\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"year\": 2024,\n" +
+                "    \"month\" : 6,\n" +
+                "    \"day\": 20,\n" +
+                "    \"events\" : [\n" +
+                "      \"Project deadline\"\n" +
+                "    ]\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"year\": 2024,\n" +
+                "    \"month\" : 6,\n" +
+                "    \"day\": 25,\n" +
+                "    \"events\" : [\n" +
+                "      \"Team lunch\",\n" +
+                "      \"Presentation\"\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]")},
+
     )
 
     fun sendMessage(question : String){
@@ -40,6 +71,7 @@ class ChatViewModel : ViewModel() {
                 val response = chat.sendMessage(question)
                 messageList.removeLast()
                 messageList.add(MessageModel(response.text.toString(), "model"))
+                HomePageJSONResponse = response.text.toString()
             }catch (e : Exception){
                 messageList.removeLast()
                 messageList.add(MessageModel("Error: "+e.message.toString(), "model"))
