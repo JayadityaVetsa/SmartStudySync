@@ -140,6 +140,8 @@ fun PhotoPickerScreenGemini(
             Text(text = "Response: $response")
         }
 
+        responseFull = response
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
