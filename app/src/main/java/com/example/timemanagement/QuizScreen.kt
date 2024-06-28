@@ -13,8 +13,11 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -23,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.gson.Gson
-
 
 data class QuizQuestion(
     val question: String,
@@ -42,11 +44,14 @@ fun parseQuiz(json: String): Quiz {
 
 @Composable
 fun QuizScreen(quiz: Quiz, navController: NavController) {
-    var currentQuestionIndex by remember { mutableStateOf(0) }
+    var currentQuestionIndex by remember { mutableIntStateOf(0) }
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
     var feedbackMessage by remember { mutableStateOf("") }
     var isCorrect by remember { mutableStateOf(false) }
-    var showNewQuiz by remember { mutableStateOf(false) }
+    var showScore by remember { mutableStateOf(false) }
+    var clicked by remember { mutableIntStateOf(0) }
+    var correctAnswers by remember { mutableIntStateOf(0) }
+    val answeredCorrectly = remember { mutableStateOf(Array(quiz.questions.size) { false }) }
 
     val currentQuestion = quiz.questions[currentQuestionIndex]
 
@@ -80,12 +85,16 @@ fun QuizScreen(quiz: Quiz, navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            feedbackMessage = if (selectedAnswer?.trim()?.equals(currentQuestion.correctAnswer.trim(), ignoreCase = true) == true) {
+            if (selectedAnswer?.trim()?.equals(currentQuestion.correctAnswer.trim(), ignoreCase = true) == true) {
+                if (clicked == 0) {
+                    correctAnswers++
+                }
                 isCorrect = true
-                "Correct!"
+                feedbackMessage = "Correct!"
             } else {
                 isCorrect = false
-                "Incorrect!"
+                clicked++
+                feedbackMessage = "Incorrect!"
             }
         }) {
             Text(text = "Submit")
@@ -110,23 +119,41 @@ fun QuizScreen(quiz: Quiz, navController: NavController) {
         if (isCorrect && currentQuestionIndex < quiz.questions.size - 1) {
             Button(onClick = {
                 currentQuestionIndex++
+                clicked = 0
                 selectedAnswer = null
                 feedbackMessage = ""
                 isCorrect = false
             }) {
                 Text(text = "Next Question")
             }
-        } else if (currentQuestionIndex == quiz.questions.size - 1) {
+        }
+        if (currentQuestionIndex == quiz.questions.size - 1) {
             Button(onClick = {
-                showNewQuiz = true
+                showScore = true
             }) {
-                Text(text = "Generate New Quiz")
+                Text(text = "See your score")
             }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "Correct Answers: $correctAnswers",
+            style = MaterialTheme.typography.h6,
+            color = MaterialTheme.colors.primary
+        )
     }
 
-    if (showNewQuiz) {
-        // Trigger navigation to the PhotoScreenPage to generate a new quiz
-        AutomaticQuizMakerPage(navController)
+    if (showScore) {
+        AlertDialog(
+            onDismissRequest = { showScore = false },
+            confirmButton = {
+                TextButton(onClick = { navController.navigate(Routes.AutomaticQuizMakerPage) }) {
+                    androidx.compose.material3.Text("OK")
+                }
+            },
+            title = { androidx.compose.material3.Text("Your Score") },
+            text = { androidx.compose.material3.Text("You got $correctAnswers out of ${quiz.questions.size} ") }
+        )
     }
 }

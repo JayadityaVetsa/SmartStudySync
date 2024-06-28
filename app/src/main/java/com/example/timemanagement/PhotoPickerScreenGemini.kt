@@ -39,6 +39,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
@@ -50,6 +51,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoPickerScreenGemini(
+//    navController: NavController,
     systemInstructions: String,
     viewModel: SimpleChatViewModelGemini = viewModel(factory = SimpleChatViewModelFactoryGemini(Constants.apiKeyImage, "gemini-1.5-flash-001", systemInstructions))
 ) {
@@ -163,8 +165,10 @@ fun PhotoPickerScreenGemini(
                     }
                 }
                 buttonClicked = true
+
             },
             shape = RoundedCornerShape(8.dp),
+            enabled = !buttonClicked,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp)
@@ -184,14 +188,25 @@ fun PhotoPickerScreenGemini(
                 firestore.collection("users").document(it.uid).collection("quizzes")
                     .add(quizData)
                     .addOnSuccessListener {
-                        // Successfully added the quiz
+                        firebaseSent = true
                     }
                     .addOnFailureListener { e ->
                         Log.e("Firebase", "Error adding quiz", e)
                     }
             }
+            Text(text = "Quiz Is Made")
         }
-
+//        if(firebaseSent){
+//            Button(
+//                shape = RoundedCornerShape(8.dp),
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 40.dp),
+//                onClick = { navController.navigate(Routes.AutomaticQuizMakerPage) }
+//            ) {
+//                Text(text = "Go to Quiz")
+//            }
+//        }
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

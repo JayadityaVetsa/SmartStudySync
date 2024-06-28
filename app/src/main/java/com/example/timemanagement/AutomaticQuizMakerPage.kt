@@ -78,6 +78,7 @@ data class QuizData(
     val quizTitle: String = "",
     val questionCount: String = ""
 )
+var firebaseSent = false
 
 @Composable
 fun PhotoScreenPage(navController: NavController){
