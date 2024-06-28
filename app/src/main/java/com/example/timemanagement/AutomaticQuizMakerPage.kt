@@ -2,55 +2,91 @@ package com.example.timemanagement
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 
 @Composable
 fun AutomaticQuizMakerPage(navController: NavController){
     val scrollStateGemini = rememberScrollState()
-    var showQuiz by remember { mutableStateOf(false) }
+    var quizzes by remember { mutableStateOf(listOf<QuizData>()) }
+    val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+    val currentUser = auth.currentUser
+
+    LaunchedEffect(currentUser) {
+        currentUser?.let {
+            firestore.collection("users").document(it.uid).collection("quizzes")
+                .get()
+                .addOnSuccessListener { result ->
+                    val quizList = result.documents.map { doc ->
+                        doc.toObject<QuizData>() ?: QuizData()
+                    }
+                    quizzes = quizList
+                }
+                .addOnFailureListener { e ->
+                    // Handle the error
+                }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollStateGemini)
     ) {
         Text(text = "Automatic Quiz Helper")
-        Button(onClick = {navController.navigate(Routes.PhotoScreenPage)}) {
+        Button(onClick = { navController.navigate(Routes.PhotoScreenPage) },
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp)
+        ) {
             Text(text = "Generate Quiz")
         }
-        if(responseFull.isNotEmpty()){
-            Button(onClick = { showQuiz = true }) {
-                Text(text = "Quiz")
-            }
-            if (showQuiz && responseFull.isNotEmpty()) {
-                val jsonResponse = responseFull.trimIndent()
-                val quiz = parseQuiz(jsonResponse)
-                QuizScreen(quiz, navController)
+
+        quizzes.forEach { quiz ->
+            Button(
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp),
+                onClick = { navController.navigate("QuizScreen/${quiz.response}") }
+            ) {
+                Text(text = "${quiz.quizTitle} has ${quiz.questionCount} questions")
             }
         }
     }
 }
 
-var responseFull : String = ""
+data class QuizData(
+    val response: String = "",
+    val quizTitle: String = "",
+    val questionCount: String = ""
+)
 
 @Composable
-fun PhotoScreenPage(){
-    val scrollStateGemini = rememberScrollState()
+fun PhotoScreenPage(navController: NavController){
+    val scrollState= rememberScrollState()
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(scrollStateGemini)
+        modifier = Modifier.fillMaxSize().verticalScroll(scrollState)
     ) {
-        PhotoPickerScreenGemini("You will get the topic or notes in a picture analyze it and generate a quiz based on the amount of questions you get. " +
+        PhotoPickerScreenGemini(
+        "You will get the topic or notes in a picture analyze it and generate a quiz based on the amount of questions you get. " +
                 "Make the questions in json format. Each question will have 4 answer choices and then at the bottom include the correct answer. " +
                 "Here is an example:\n" +
                 "{\n" +
@@ -66,7 +102,8 @@ fun PhotoScreenPage(){
                 "            \"correctAnswer\": \"4\"\n" +
                 "        }\n" +
                 "    ]\n" +
-                "}")
+                "}"
+        )
     }
 
 }

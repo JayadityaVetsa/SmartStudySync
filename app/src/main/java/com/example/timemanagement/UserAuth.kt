@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -22,12 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun SignUpScreen(
-    onSignUp: (String, String) -> Unit,
+    onSignUp: (String, String, String) -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -40,6 +43,15 @@ fun SignUpScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Sign Up", style = MaterialTheme.typography.bodyLarge)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("User name") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -75,7 +87,7 @@ fun SignUpScreen(
         Button(
             onClick = {
                 if (password == confirmPassword) {
-                    onSignUp(email, password)
+                    onSignUp(name, email, password)
                 } else {
                     // Handle password mismatch
                 }
@@ -93,12 +105,32 @@ fun SignUpScreen(
     }
 }
 
-fun signUp(email: String, password: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+fun signUp(name: String, email: String, password: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                onSuccess()
+                // Get the newly created user's ID
+                val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                // Create a user map to add to Firestore
+                val user = hashMapOf(
+                    "name" to name,
+                    "email" to email,
+                    "createdAt" to com.google.firebase.Timestamp.now()
+                )
+
+                // Add the user to the Firestore database
+                db.collection("users").document(userId)
+                    .set(user)
+                    .addOnSuccessListener {
+                        onSuccess()
+                    }
+                    .addOnFailureListener { e ->
+                        onFailure(e)
+                    }
             } else {
                 task.exception?.let { onFailure(it) }
             }
@@ -107,11 +139,13 @@ fun signUp(email: String, password: String, onSuccess: () -> Unit, onFailure: (E
 
 @Composable
 fun LoginScreen(
-    onLogin: (String, String) -> Unit,
+    onLogin: (String, String, (String) -> Unit) -> Unit,
     onNavigateToSignUp: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -144,7 +178,12 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onLogin(email, password) },
+            onClick = {
+                onLogin(email, password) { error ->
+                    errorMessage = error
+                    showErrorDialog = true
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Login")
@@ -156,16 +195,36 @@ fun LoginScreen(
             Text("Don't have an account? Sign Up here.")
         }
     }
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showErrorDialog = false }) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Alert") },
+            text = { Text("Login information is incorrect please check if you have typed your " +
+                    "password or email correctly.") }
+        )
+    }
 }
 
-fun login(email: String, password: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+fun login(
+    email: String,
+    password: String,
+    onSuccess: () -> Unit,
+    onFailure: (String) -> Unit
+) {
     val auth = FirebaseAuth.getInstance()
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 onSuccess()
             } else {
-                task.exception?.let { onFailure(it) }
+                val error = task.exception?.message ?: "Unknown error occurred"
+                onFailure(error)
             }
         }
 }

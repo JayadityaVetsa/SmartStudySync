@@ -17,23 +17,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 
 @Composable
-fun AuthScreenSetup(viewModel: ChatViewModel){
+fun AuthScreenSetup(viewModel: ChatViewModel) {
     var isLoggedIn by remember { mutableStateOf(false) }
 
     if (isLoggedIn) {
         MyAppNavigation(viewModel)
     } else {
-        var showSignUpScreen by remember { mutableStateOf(true) }
+        var showSignUpScreen by remember { mutableStateOf(false) } // Start with LoginScreen
 
         if (showSignUpScreen) {
             SignUpScreen(
-                onSignUp = { email, password ->
-                    signUp(email, password,
+                onSignUp = { name, email, password ->
+                    signUp(name, email, password,
                         onSuccess = { isLoggedIn = true },
                         onFailure = { e ->
                             // Handle error
@@ -44,11 +46,11 @@ fun AuthScreenSetup(viewModel: ChatViewModel){
             )
         } else {
             LoginScreen(
-                onLogin = { email, password ->
+                onLogin = { email, password, onError ->
                     login(email, password,
                         onSuccess = { isLoggedIn = true },
-                        onFailure = { e ->
-                            // Handle error
+                        onFailure = { errorMessage ->
+                            onError(errorMessage) // Pass the error message to the composable
                         }
                     )
                 },
@@ -57,6 +59,7 @@ fun AuthScreenSetup(viewModel: ChatViewModel){
         }
     }
 }
+
 
 @Composable
 fun MyAppNavigation(viewModel: ChatViewModel){
@@ -70,21 +73,6 @@ fun MyAppNavigation(viewModel: ChatViewModel){
             BottomAppBar(
                 containerColor = Color.Green
             ){
-                IconButton(
-                    onClick = {
-                        selected.value = 0
-                        navController.navigate(Routes.HomePage){
-                            popUpTo(0)
-                        }
-                    },
-                    modifier = Modifier.weight(1f)) {
-                    Icon(
-                        Icons.Default.Home,
-                        contentDescription = "Home",
-                        modifier = Modifier.size(26.dp),
-                        tint = if (selected.value == 0) Color.Black else Color.DarkGray
-                    )
-                }
 
                 IconButton(
                     onClick = {
@@ -114,6 +102,22 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                         contentDescription = "Homework Helper",
                         modifier = Modifier.size(26.dp),
                         tint = if (selected.value == 2) Color.Black else Color.DarkGray
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        selected.value = 0
+                        navController.navigate(Routes.HomePage){
+                            popUpTo(0)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)) {
+                    Icon(
+                        Icons.Default.Home,
+                        contentDescription = "Home",
+                        modifier = Modifier.size(26.dp),
+                        tint = if (selected.value == 0) Color.Black else Color.DarkGray
                     )
                 }
 
@@ -161,16 +165,21 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                     ChatPage(navController, viewModel = viewModel)
                 }
                 composable(Routes.HomeworkHelperPage) {
-                    HomeworkHelperPage()
+                    HomeworkHelperPage(navController)
                 }
                 composable(Routes.AutomaticQuizMakerPage) {
                     AutomaticQuizMakerPage(navController)
                 }
                 composable(Routes.PhotoScreenPage) {
-                    PhotoScreenPage()
+                    PhotoScreenPage(navController)
                 }
                 composable(Routes.SettingsPage) {
                     SettingsPage()
+                }
+                composable(route = "QuizScreen/{response}", arguments = listOf(navArgument("response") { type = NavType.StringType })) {
+                    val response = it.arguments?.getString("response") ?: ""
+                    val quiz = parseQuiz(response)
+                    QuizScreen(quiz, navController)
                 }
             }
         )

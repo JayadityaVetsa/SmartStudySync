@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.media3.common)
     implementation(libs.places)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

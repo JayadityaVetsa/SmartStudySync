@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -17,7 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -40,6 +42,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -51,8 +55,13 @@ fun PhotoPickerScreenGemini(
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var textFieldValue by remember { mutableStateOf("") }
+    var buttonClicked by remember { mutableStateOf(false) }
+    var titleValue by remember { mutableStateOf("") }
+    var questionCount by remember { mutableStateOf("1") }
     val response by viewModel.response.collectAsState()
     val context = LocalContext.current
+    val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
 
     // Register the image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -104,14 +113,41 @@ fun PhotoPickerScreenGemini(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Outlined Text Field for input
+        // Outlined Text Field for title input
         OutlinedTextField(
-            value = textFieldValue,
-            onValueChange = { newValue -> textFieldValue = newValue },
-            label = { Text(text = "Enter Text") },
+            value = titleValue,
+            onValueChange = { newValue -> titleValue = newValue },
+            label = { Text(text = "Enter Title") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Outlined Text Field for topic input
+        OutlinedTextField(
+            value = textFieldValue,
+            onValueChange = { newValue -> textFieldValue = newValue },
+            label = { Text(text = "Enter Topic") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Outlined Text Field for question count input
+        OutlinedTextField(
+            value = questionCount,
+            onValueChange = { newValue -> questionCount = newValue },
+            label = { Text(text = "Number of Questions") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(8.dp)
         )
 
@@ -122,9 +158,11 @@ fun PhotoPickerScreenGemini(
                 selectedImageUri?.let { uri ->
                     val bitmap = uriToBitmap(context, uri)
                     bitmap?.let {
-                        viewModel.generateContentWithImage(it, textFieldValue)
+                        val prompt = "$textFieldValue, Number of Questions: $questionCount"
+                        viewModel.generateContentWithImage(it, prompt)
                     }
                 }
+                buttonClicked = true
             },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
@@ -136,11 +174,23 @@ fun PhotoPickerScreenGemini(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        SelectionContainer {
-            Text(text = "Response: $response")
+//        SelectionContainer {
+//            Text(text = "Response: $response")
+//        }
+        if (response.isNotEmpty() && titleValue.isNotEmpty() && buttonClicked) {
+            val currentUser = auth.currentUser
+            currentUser?.let {
+                val quizData = QuizData(response, titleValue, questionCount)
+                firestore.collection("users").document(it.uid).collection("quizzes")
+                    .add(quizData)
+                    .addOnSuccessListener {
+                        // Successfully added the quiz
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("Firebase", "Error adding quiz", e)
+                    }
+            }
         }
-
-        responseFull = response
 
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -174,6 +224,7 @@ class SimpleChatViewModelGemini(
 
     fun generateContentWithImage(bitmap: Bitmap, prompt: String) {
         viewModelScope.launch {
+            _response.value = ""
             try {
                 val content = content {
                     image(bitmap)

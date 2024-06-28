@@ -7,4 +7,5 @@ object Routes {
     var AutomaticQuizMakerPage = "AutomaticQuizMakerPage"
     var PhotoScreenPage = "PhotoScreenPage"
     var SettingsPage = "SettingsPage"
+    var QuizScreen = "QuizScreen"
 }
