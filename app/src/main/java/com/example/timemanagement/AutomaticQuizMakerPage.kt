@@ -49,7 +49,7 @@ fun AutomaticQuizMakerPage(navController: NavController){
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollStateGemini)
     ) {
-        Text(text = "Automatic Quiz Helper")
+        AppHeader("Automatic Quiz Maker")
         Button(onClick = { navController.navigate(Routes.PhotoScreenPage) },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "335620800879",
+    "project_id": "time-management-app-32044",
+    "storage_bucket": "time-management-app-32044.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335620800879:android:4722cfc1c00722060be89a",
+        "android_client_info": {
+          "package_name": "com.example.timemanagement"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "335620800879-gn6fq11r6cs2ljoedk8tqqd3i7jupht3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEyEFaJI2Eh7OQ7d2xaSb2HqqCTUB1lwI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "335620800879-gn6fq11r6cs2ljoedk8tqqd3i7jupht3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "335620800879-4fgm4r006anun9pit0j616bgk17ttn0c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.timemanagementapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

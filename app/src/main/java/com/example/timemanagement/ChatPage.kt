@@ -44,7 +44,7 @@ fun ChatPage(navController: NavController, modifier : Modifier = Modifier, viewM
     Column(
         modifier = modifier
     ) {
-        AppHeader()
+        AppHeader("AI chatbot")
         MessageList(
             modifier = Modifier.weight(1f),
             viewModel.messageList
@@ -111,7 +111,7 @@ fun MessageRow (messageModel: MessageModel){
                         bottom = 8.dp
                     )
                     .clip(RoundedCornerShape(48f))
-                    .background(if (isModel) ColorModelMessage else ColorUserMessage)
+                    .background(if (isModel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary)
                     .padding(16.dp)
             ){
                 SelectionContainer {
@@ -127,7 +127,7 @@ fun MessageRow (messageModel: MessageModel){
 }
 
 @Composable
-fun AppHeader() {
+fun AppHeader(title: String = "") {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -135,7 +135,7 @@ fun AppHeader() {
     ) {
         Text(
             modifier = Modifier.padding(16.dp),
-            text = "Bot",
+            text = title,
             color = Color.White,
             fontSize = 22.sp
         )

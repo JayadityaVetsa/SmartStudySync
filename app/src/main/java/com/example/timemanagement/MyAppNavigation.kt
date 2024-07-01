@@ -22,6 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.timemanagement.ui.theme.*
+
 
 @Composable
 fun AuthScreenSetup(viewModel: ChatViewModel) {
@@ -71,7 +73,7 @@ fun MyAppNavigation(viewModel: ChatViewModel){
     Scaffold (
         bottomBar = {
             BottomAppBar(
-                containerColor = Color.Green
+                containerColor = color,
             ){
 
                 IconButton(
@@ -98,10 +100,10 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                     },
                     modifier = Modifier.weight(1f)) {
                     Icon(
-                        painterResource(R.drawable.outline_indeterminate_question_box_24),
+                        if (selected.value == 0) painterResource(R.drawable.baseline_check_24) else painterResource(R.drawable.outline_check_24),
                         contentDescription = "Homework Helper",
                         modifier = Modifier.size(26.dp),
-                        tint = if (selected.value == 2) Color.Black else Color.DarkGray
+
                     )
                 }
 
@@ -114,10 +116,10 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                     },
                     modifier = Modifier.weight(1f)) {
                     Icon(
-                        Icons.Default.Home,
+                        if (selected.value == 0) painterResource(R.drawable.baseline_home_24) else painterResource(R.drawable.outline_home_24),
                         contentDescription = "Home",
                         modifier = Modifier.size(26.dp),
-                        tint = if (selected.value == 0) Color.Black else Color.DarkGray
+
                     )
                 }
 

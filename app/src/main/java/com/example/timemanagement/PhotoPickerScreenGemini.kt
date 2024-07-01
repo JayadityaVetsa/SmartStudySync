@@ -74,12 +74,15 @@ fun PhotoPickerScreenGemini(
     )
 
     Column(
+
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
+
     ) {
+        AppHeader()
         // Display the selected image or a placeholder
         if (selectedImageUri != null) {
             Image(

@@ -17,7 +17,7 @@ fun HomeworkHelperPage(navController: NavController){
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState)
     ) {
-        Text(text = "Homework Helper Page")
+        AppHeader("Homework Helper")
         PhotoPickerScreenGemini(
             "You will analyze the question in the picture and" +
                 "then provide step-by-step instructions to solve the problem. Make sure you explain " +
