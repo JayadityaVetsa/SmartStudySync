@@ -8,4 +8,5 @@ object Routes {
     var PhotoScreenPage = "PhotoScreenPage"
     var SettingsPage = "SettingsPage"
     var QuizScreen = "QuizScreen"
+    var AuthScreenSetup = "AuthScreenSetup"
 }

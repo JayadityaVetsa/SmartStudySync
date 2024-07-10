@@ -11,8 +11,6 @@ import androidx.navigation.NavController
 
 @Composable
 fun HomeworkHelperPage(navController: NavController){
-//    val generativeModel = Firebase.vertexAI.generativeModel("gemini-1.5-flash-001")
-//    val response = generativeModel.generateContent("Write a story about the green robot")
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState)

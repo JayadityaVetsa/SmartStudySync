@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class ChatViewModel : ViewModel() {
 
@@ -20,7 +21,8 @@ class ChatViewModel : ViewModel() {
                 "that will manage the users time efficiently to ensure productivity. " +
                 "You are not a chatbot you will not answer or communicate with the user." +
                 "Your response will only be JSON nothing else. If the User doesn't give a schedule" +
-                "If the user says something like today use current local date." +
+                "If the user says something like today use current local date. " +
+                "Here is the day for today to use as context: ${LocalDate.now()}. " +
                 "don't say anything, don't respond with anything else, just wait for user schedule." +
                 "Output the schedule in this format:" +
                 "[{year, month, day, events: [List of Events]}]" +
@@ -76,7 +78,6 @@ class ChatViewModel : ViewModel() {
                 messageList.removeLast()
                 messageList.add(MessageModel("Error: "+e.message.toString(), "model"))
             }
-
 
         }
     }

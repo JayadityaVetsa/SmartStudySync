@@ -23,11 +23,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.timemanagement.ui.theme.*
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 
 @Composable
 fun AuthScreenSetup(viewModel: ChatViewModel) {
     var isLoggedIn by remember { mutableStateOf(false) }
+    val user = Firebase.auth.currentUser
+    if (user != null) {
+        isLoggedIn = true
+    } else {
+        isLoggedIn = false
+    }
 
     if (isLoggedIn) {
         MyAppNavigation(viewModel)
@@ -100,11 +108,11 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                     },
                     modifier = Modifier.weight(1f)) {
                     Icon(
-                        if (selected.value == 0) painterResource(R.drawable.baseline_check_24) else painterResource(R.drawable.outline_check_24),
+                        if (selected.value == 2) painterResource(R.drawable.baseline_check_24) else painterResource(R.drawable.outline_check_24),
                         contentDescription = "Homework Helper",
                         modifier = Modifier.size(26.dp),
 
-                    )
+                        )
                 }
 
                 IconButton(
@@ -120,7 +128,7 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                         contentDescription = "Home",
                         modifier = Modifier.size(26.dp),
 
-                    )
+                        )
                 }
 
                 IconButton(

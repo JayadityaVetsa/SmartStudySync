@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import com.example.timemanagement.ui.theme.ColorModelMessage
 import com.example.timemanagement.ui.theme.ColorUserMessage
@@ -41,6 +43,7 @@ import com.example.timemanagement.ui.theme.Purple80
 
 @Composable
 fun ChatPage(navController: NavController, modifier : Modifier = Modifier, viewModel: ChatViewModel){
+
     Column(
         modifier = modifier
     ) {
@@ -116,7 +119,7 @@ fun MessageRow (messageModel: MessageModel){
             ){
                 SelectionContainer {
                     Text(
-                        text = messageModel.message,
+                        text = if (isModel) "Done! Please go to homepage and check your events" else messageModel.message,
                         fontWeight = FontWeight.W500,
                         color = Color.White
                     )
@@ -144,7 +147,7 @@ fun AppHeader(title: String = "") {
 
 @Composable
 fun MessageInput(onMessageSend : (String)-> Unit) {
-    var message by remember {
+    var message by rememberSaveable {
         mutableStateOf("")
     }
 

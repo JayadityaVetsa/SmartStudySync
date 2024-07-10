@@ -51,32 +51,13 @@ fun HomePage(navController: NavController){
                 "month": 6,
                 "day": 19,
                 "events": [
-                  "Meeting With Bob",
-                  "Dentist appointment"
-                ]
-              },
-              {
-                "year": 2024,
-                "month": 6,
-                "day": 20,
-                "events": [
-                  "Project deadline"
-                ]
-              },
-              {
-                "year": 2024,
-                "month": 6,
-                "day": 25,
-                "events": [
-                  "Team lunch",
-                  "Presentation"
+                  "Sample event"
                 ]
               }
             ]
             """
         }
         val events: Map<LocalDate, List<String>> = parseEvents(HomePageJSONResponse)
-//        Log.d("HomePage", "Events: $events")
         CalendarApp(events)
     }
 }
