@@ -27,14 +27,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,7 +77,141 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
-fun PhotoPickerScreenGemini(
+fun PhotoPickerScreenGeminiHomework(
+    systemInstructions: String,
+    viewModel: SimpleChatViewModelGemini = viewModel(factory = SimpleChatViewModelFactoryGemini(Constants.apiKeyImage, "gemini-1.5-flash-001", systemInstructions))
+) {
+    var selectedImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var textFieldValue by rememberSaveable { mutableStateOf("") }
+    var buttonClicked by remember { mutableStateOf(false) }
+    val response by viewModel.response.collectAsState()
+    val context = LocalContext.current
+
+    // Register the image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            selectedImageUri = uri
+        }
+    )
+
+    Column(
+
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+
+    ) {
+        AppHeader()
+        // Display the selected image or a placeholder
+        if (selectedImageUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(model = selectedImageUri),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(300.dp)
+                    .padding(8.dp),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(300.dp)
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "No Image Selected", color = Color.Gray)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { imagePickerLauncher.launch("image/*") },
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp)
+        ) {
+            Text(text = "Select Image")
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+
+        // Outlined Text Field for prompt input
+        OutlinedTextField(
+            value = textFieldValue,
+            onValueChange = { newValue -> textFieldValue = newValue },
+            label = { Text(text = "Enter Prompt") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                selectedImageUri?.let { uri ->
+                    val bitmap = uriToBitmap(context, uri)
+                    bitmap?.let {
+                        val prompt = textFieldValue
+                        viewModel.generateContentWithImage(it, prompt)
+                    }
+                }
+                buttonClicked = true
+
+            },
+            shape = RoundedCornerShape(8.dp),
+            enabled = !buttonClicked,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp)
+        ) {
+            Text(text = "Generate Content")
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+        if(buttonClicked && response.isNotEmpty()){
+            ResponseSection(response)
+        }else if(buttonClicked){
+            ResponseSection("Loading...")
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun ResponseSection(response: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(text = "Response:", style = MaterialTheme.typography.labelLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = response,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun PhotoPickerScreenGeminiQuiz(
     systemInstructions: String,
     viewModel: SimpleChatViewModelGemini = viewModel(factory = SimpleChatViewModelFactoryGemini(Constants.apiKeyImage, "gemini-1.5-flash-001", systemInstructions))
 ) {
@@ -221,17 +359,6 @@ fun PhotoPickerScreenGemini(
             }
             Text(text = "Quiz Is Made")
         }
-//        if(firebaseSent){
-//            Button(
-//                shape = RoundedCornerShape(8.dp),
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(horizontal = 40.dp),
-//                onClick = { navController.navigate(Routes.AutomaticQuizMakerPage) }
-//            ) {
-//                Text(text = "Go to Quiz")
-//            }
-//        }
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

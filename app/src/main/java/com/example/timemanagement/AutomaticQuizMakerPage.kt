@@ -101,7 +101,7 @@ fun PhotoScreenPage(navController: NavController){
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState)
     ) {
-        PhotoPickerScreenGemini(
+        PhotoPickerScreenGeminiQuiz(
         "You will get the topic or notes in a picture analyze it and generate a quiz based on the amount of questions you get. " +
                 "Make the questions in json format. Each question will have 4 answer choices and then at the bottom include the correct answer. " +
                 "Here is an example:\n" +
