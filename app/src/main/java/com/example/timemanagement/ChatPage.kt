@@ -40,6 +40,7 @@ import androidx.navigation.NavController
 import com.example.timemanagement.ui.theme.ColorModelMessage
 import com.example.timemanagement.ui.theme.ColorUserMessage
 import com.example.timemanagement.ui.theme.Purple80
+import java.time.LocalDate
 
 @Composable
 fun ChatPage(navController: NavController, modifier : Modifier = Modifier, viewModel: ChatViewModel){
@@ -97,6 +98,7 @@ fun MessageList(modifier: Modifier = Modifier, messageList: List<MessageModel>){
 
 @Composable
 fun MessageRow (messageModel: MessageModel){
+    var eventsWorks by remember { mutableStateOf(false) }
     val isModel = messageModel.role=="model"
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -117,12 +119,26 @@ fun MessageRow (messageModel: MessageModel){
                     .background(if (isModel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary)
                     .padding(16.dp)
             ){
-                SelectionContainer {
+                try {
+                    if (isModel) {
+                        events = parseEvents(messageModel.message)
+                    }
+                    eventsWorks = true
+                } catch (e: Exception) {
                     Text(
-                        text = if (isModel) "Done! Please go to homepage and check your events" else messageModel.message,
+                        text = messageModel.message,
                         fontWeight = FontWeight.W500,
                         color = Color.White
                     )
+                }
+                if (eventsWorks) {
+                    SelectionContainer {
+                        Text(
+                            text = if (isModel) "Done! Please go to homepage and check your events" else messageModel.message,
+                            fontWeight = FontWeight.W500,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }

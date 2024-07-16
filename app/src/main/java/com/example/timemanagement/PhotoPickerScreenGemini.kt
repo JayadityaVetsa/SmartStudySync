@@ -96,7 +96,6 @@ fun PhotoPickerScreenGeminiHomework(
     )
 
     Column(
-
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
@@ -104,7 +103,6 @@ fun PhotoPickerScreenGeminiHomework(
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        AppHeader()
         // Display the selected image or a placeholder
         if (selectedImageUri != null) {
             Image(
@@ -242,7 +240,6 @@ fun PhotoPickerScreenGeminiQuiz(
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        AppHeader()
         // Display the selected image or a placeholder
         if (selectedImageUri != null) {
             Image(
@@ -347,9 +344,10 @@ fun PhotoPickerScreenGeminiQuiz(
         if (response.isNotEmpty() && titleValue.isNotEmpty() && buttonClicked) {
             val currentUser = auth.currentUser
             currentUser?.let {
-                val quizData = QuizData(response, titleValue, questionCount)
-                firestore.collection("users").document(it.uid).collection("quizzes")
-                    .add(quizData)
+                val quizData = QuizData("", response, titleValue, questionCount)
+                val docRef = firestore.collection("users").document(it.uid).collection("quizzes").document()
+                quizData.documentId = docRef.id
+                docRef.set(quizData)
                     .addOnSuccessListener {
                         firebaseSent = true
                     }
@@ -359,6 +357,7 @@ fun PhotoPickerScreenGeminiQuiz(
             }
             Text(text = "Quiz Is Made")
         }
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

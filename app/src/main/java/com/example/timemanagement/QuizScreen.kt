@@ -127,7 +127,7 @@ fun QuizScreen(quiz: Quiz, navController: NavController) {
                 Text(text = "Next Question")
             }
         }
-        if (currentQuestionIndex == quiz.questions.size - 1) {
+        if (isCorrect && currentQuestionIndex == quiz.questions.size - 1) {
             Button(onClick = {
                 showScore = true
             }) {

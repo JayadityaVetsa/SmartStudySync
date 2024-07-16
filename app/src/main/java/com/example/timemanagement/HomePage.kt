@@ -22,6 +22,7 @@ import kotlinx.serialization.json.Json
 import java.time.LocalDate
 
 var HomePageJSONResponse = ""
+var events : Map<LocalDate, List<String>> = mapOf(LocalDate.of(2024, 6, 19) to listOf("Sample event"))
 
 @Composable
 fun HomePage(navController: NavController){
@@ -43,21 +44,6 @@ fun HomePage(navController: NavController){
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 16.dp)
         )
-        if (HomePageJSONResponse.isEmpty()){
-            HomePageJSONResponse = """
-            [
-              {
-                "year": 2024,
-                "month": 6,
-                "day": 19,
-                "events": [
-                  "Sample event"
-                ]
-              }
-            ]
-            """
-        }
-        val events: Map<LocalDate, List<String>> = parseEvents(HomePageJSONResponse)
         CalendarApp(events)
     }
 }
