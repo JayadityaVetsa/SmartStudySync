@@ -75,17 +75,15 @@ fun CalendarApp(
     val eventsState by viewModel.events.collectAsState()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
     ) { padding ->
         Surface(
             modifier = Modifier
-                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(padding)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
             ) {
                 CalendarWidget(
                     days = DateUtil.daysOfWeek,
@@ -107,12 +105,19 @@ fun CalendarApp(
                         viewModel.selectDate(selectedDate)
                     }
                 )
-                LazyColumn (modifier = Modifier.heightIn(max = 300.dp)) {
+                LazyColumn (modifier = Modifier.heightIn(max = 300.dp).padding(16.dp)) {
                     val selectedDate = uiState.selectedDate
                     if (selectedDate != null) {
                         val eventsForSelectedDate = eventsState[selectedDate].orEmpty()
                         if (eventsForSelectedDate.isEmpty()) {
-                            item { Text("No events for $selectedDate") }
+                            item {
+                                Box(
+                                    modifier = Modifier.fillParentMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("Click the plus icon to add events")
+                                }
+                            }
                         } else {
                             items(eventsForSelectedDate) { event ->
                                 Text(event, modifier = Modifier.padding(8.dp))
@@ -128,12 +133,6 @@ fun CalendarApp(
         }
     }
 }
-
-
-
-
-
-
 
 @Composable
 fun CalendarWidget(

@@ -1,21 +1,13 @@
 package com.example.timemanagement
 
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,28 +17,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.timemanagement.ui.theme.*
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import androidx.compose.material3.ColorScheme
+import com.example.timemanagement.ui.theme.lightWhite
 
 
 @Composable
 fun AuthScreenSetup(viewModel: ChatViewModel) {
     var isLoggedIn by remember { mutableStateOf(false) }
     val user = Firebase.auth.currentUser
-    if (user != null) {
-        isLoggedIn = true
-    } else {
-        isLoggedIn = false
-    }
+    isLoggedIn = user != null
 
     if (isLoggedIn) {
         MyAppNavigation(viewModel)
@@ -81,39 +67,18 @@ fun AuthScreenSetup(viewModel: ChatViewModel) {
     }
 }
 
-
-
-
-
 @Composable
 fun MyAppNavigation(viewModel: ChatViewModel){
     val navController = rememberNavController()
-    val selected = rememberSaveable { mutableStateOf(0) }
+    val selected = rememberSaveable { mutableStateOf(1) }
 
     Scaffold (
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.primary) {
-
-
-                NavigationBarItem(
-                    selected = selected.value == 1,
-                    onClick = {
-                        selected.value = 1
-                        navController.navigate(Routes.ChatPage){
-                            popUpTo(Routes.HomePage) { inclusive = true }
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            painter = if (selected.value == 1) painterResource(R.drawable.baseline_question_answer_24) else painterResource(R.drawable.outline_question_answer_24),
-                            contentDescription = "Chat",
-                            modifier = Modifier.size(26.dp),
-                            tint = Color.White
-                        )
-                    },
-
-                    )
-
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                tonalElevation = 10.dp
+            ) {
                 NavigationBarItem(
                     selected = selected.value == 2,
                     onClick = {
@@ -129,8 +94,12 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                             modifier = Modifier.size(26.dp),
                             tint = Color.White
                         )
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = lightWhite // Change this to the darker color you want
+                    )
                 )
+
                 NavigationBarItem(
                     selected = selected.value == 0,
                     onClick = {
@@ -146,7 +115,10 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                             modifier = Modifier.size(26.dp),
                             tint = Color.White
                         )
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = lightWhite
+                    )
                 )
 
                 NavigationBarItem(
@@ -164,7 +136,10 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                             modifier = Modifier.size(26.dp),
                             tint = Color.White
                         )
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = lightWhite
+                    )
                 )
 
                 NavigationBarItem(
@@ -182,7 +157,10 @@ fun MyAppNavigation(viewModel: ChatViewModel){
                             modifier = Modifier.size(26.dp),
                             tint = Color.White
                         )
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = lightWhite
+                    )
                 )
             }
         }

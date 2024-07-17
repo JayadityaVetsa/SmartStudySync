@@ -33,6 +33,7 @@ material = "1.5.4"
 activityKtx = "1.9.0"
 materialVersion = "1.6.8"
 navigationCompose = "2.7.7"
+playServicesMlkitDocumentScanner = "16.0.0-beta1"
 runtimeLivedata = "1.6.8"
 ui = "1.6.8"
 uiToolingPreview = "1.6.8"
@@ -93,6 +94,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version
 androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "material" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+play-services-mlkit-document-scanner = { module = "com.google.android.gms:play-services-mlkit-document-scanner", version.ref = "playServicesMlkitDocumentScanner" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
 androidx-media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3Common" }

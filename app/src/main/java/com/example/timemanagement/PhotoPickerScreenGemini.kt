@@ -1,80 +1,64 @@
 package com.example.timemanagement
 
-import android.Manifest
+import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.io.File
 
 @Composable
 fun PhotoPickerScreenGeminiHomework(
@@ -86,14 +70,28 @@ fun PhotoPickerScreenGeminiHomework(
     var buttonClicked by remember { mutableStateOf(false) }
     val response by viewModel.response.collectAsState()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Register the image picker launcher
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            selectedImageUri = uri
+    val documentScanner = remember {
+        DocumentScanner(
+            context = context,
+            onScanResult = { uri ->
+                selectedImageUri = uri
+            },
+            onError = { message ->
+                scope.launch {
+                    snackbarHostState.showSnackbar(message)
+                }
+            }
+        )
+    }
+
+    val scannerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            documentScanner.handleScanResult(result.data)
         }
-    )
+    }
 
     Column(
         modifier = Modifier
@@ -101,7 +99,6 @@ fun PhotoPickerScreenGeminiHomework(
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
         // Display the selected image or a placeholder
         if (selectedImageUri != null) {
@@ -127,17 +124,18 @@ fun PhotoPickerScreenGeminiHomework(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { imagePickerLauncher.launch("image/*") },
+            onClick = {
+                documentScanner.startScan { request -> scannerLauncher.launch(request) }
+            },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp)
         ) {
-            Text(text = "Select Image")
+            Text(text = "Scan Document")
         }
 
         Spacer(modifier = Modifier.height(32.dp))
-
 
         // Outlined Text Field for prompt input
         OutlinedTextField(
@@ -162,7 +160,6 @@ fun PhotoPickerScreenGeminiHomework(
                     }
                 }
                 buttonClicked = true
-
             },
             shape = RoundedCornerShape(8.dp),
             enabled = !buttonClicked,
@@ -174,9 +171,10 @@ fun PhotoPickerScreenGeminiHomework(
         }
 
         Spacer(modifier = Modifier.height(32.dp))
-        if(buttonClicked && response.isNotEmpty()){
+
+        if (buttonClicked && response.isNotEmpty()) {
             ResponseSection(response)
-        }else if(buttonClicked){
+        } else if (buttonClicked) {
             ResponseSection("Loading...")
         }
 
@@ -223,22 +221,30 @@ fun PhotoPickerScreenGeminiQuiz(
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
-    // Register the image picker launcher
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            selectedImageUri = uri
+    val documentScanner = remember {
+        DocumentScanner(
+            context = context,
+            onScanResult = { uri ->
+                selectedImageUri = uri
+            },
+            onError = { message ->
+                // Handle errors here if needed
+            }
+        )
+    }
+
+    val scannerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            documentScanner.handleScanResult(result.data)
         }
-    )
+    }
 
     Column(
-
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
         // Display the selected image or a placeholder
         if (selectedImageUri != null) {
@@ -248,7 +254,7 @@ fun PhotoPickerScreenGeminiQuiz(
                 modifier = Modifier
                     .size(300.dp)
                     .padding(8.dp),
-                contentScale = ContentScale.Crop
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
         } else {
             Box(
@@ -264,13 +270,17 @@ fun PhotoPickerScreenGeminiQuiz(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { imagePickerLauncher.launch("image/*") },
-            shape = RoundedCornerShape(8.dp),
+            onClick = {
+                documentScanner.startScan { request ->
+                    scannerLauncher.launch(request)
+                }
+            },
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp)
         ) {
-            Text(text = "Select Image")
+            Text(text = "Scan Document")
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -292,7 +302,7 @@ fun PhotoPickerScreenGeminiQuiz(
         OutlinedTextField(
             value = textFieldValue,
             onValueChange = { newValue -> textFieldValue = newValue },
-            label = { Text(text = "Enter Topic") },
+            label = { Text(text = "Enter Topic/Prompt") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -338,9 +348,6 @@ fun PhotoPickerScreenGeminiQuiz(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-//        SelectionContainer {
-//            Text(text = "Response: $response")
-//        }
         if (response.isNotEmpty() && titleValue.isNotEmpty() && buttonClicked) {
             val currentUser = auth.currentUser
             currentUser?.let {
@@ -415,27 +422,38 @@ fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
     }
 }
 
+class DocumentScanner(
+    private val context: Context,
+    private val onScanResult: (Uri) -> Unit,
+    private val onError: (String) -> Unit
+) {
+    private val scannerOptions = GmsDocumentScannerOptions.Builder()
+        .setGalleryImportAllowed(true)
+        .setPageLimit(2)
+        .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG, GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
+        .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+        .build()
 
-@Composable
-fun RequestCameraPermission(onPermissionResult: (Boolean) -> Unit) {
-    val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted: Boolean ->
-            onPermissionResult(isGranted)
-        }
-    )
+    private val scanner = GmsDocumentScanning.getClient(scannerOptions)
 
-    LaunchedEffect(Unit) {
-        when {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission is granted
-                onPermissionResult(true)
+    fun startScan(activityLauncher: (IntentSenderRequest) -> Unit) {
+        scanner.getStartScanIntent(context as Activity)
+            .addOnSuccessListener { intentSender ->
+                activityLauncher(IntentSenderRequest.Builder(intentSender).build())
             }
-            else -> {
-                // Request permission
-                permissionLauncher.launch(Manifest.permission.CAMERA)
+            .addOnFailureListener { exception ->
+                val errorMessage = when (exception) {
+                    is ApiException -> "Feature not available in the current version of Google Play services."
+                    else -> "Something went wrong: ${exception.localizedMessage}"
+                }
+                onError(errorMessage)
             }
+    }
+
+    fun handleScanResult(data: Intent?) {
+        val gmsResult = GmsDocumentScanningResult.fromActivityResultIntent(data)
+        gmsResult?.pages?.forEach { page ->
+            onScanResult(page.imageUri)
         }
     }
 }

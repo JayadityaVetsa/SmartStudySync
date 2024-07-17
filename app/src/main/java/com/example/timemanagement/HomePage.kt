@@ -1,11 +1,16 @@
 package com.example.timemanagement
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,28 +30,43 @@ var HomePageJSONResponse = ""
 var events : Map<LocalDate, List<String>> = mapOf(LocalDate.of(2024, 6, 19) to listOf("Sample event"))
 
 @Composable
-fun HomePage(navController: NavController){
-    Column(
+fun HomePage(navController: NavController) {
+    Box(
         Modifier
             .fillMaxSize()
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
     ) {
-        // Text at the top with a larger size
-        Text(
-            text = "Home Page",
-            style = TextStyle(
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
-            ),
+        Column(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(top = 16.dp)
-        )
-        CalendarApp(events)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            // Text at the top with a larger size
+            Text(
+                text = "Home Page",
+                style = TextStyle(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 16.dp)
+            )
+            CalendarApp(events)
+        }
+
+        // FloatingActionButton at the bottom
+        FloatingActionButton(
+            onClick = { navController.navigate(Routes.ChatPage) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = "Make a new event using AI.")
+        }
     }
 }
+
 
 fun parseEvents(jsonString: String): Map<LocalDate, List<String>> {
     val json = Json { ignoreUnknownKeys = true } // Configure the JSON parser
