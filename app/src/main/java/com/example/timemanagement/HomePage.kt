@@ -1,5 +1,6 @@
 package com.example.timemanagement
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -22,15 +28,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 var HomePageJSONResponse = ""
-var events : Map<LocalDate, List<String>> = mapOf(LocalDate.of(2024, 6, 19) to listOf("Sample event"))
+
 
 @Composable
 fun HomePage(navController: NavController) {
+    val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+    val currentUser = auth.currentUser
+
     Box(
         Modifier
             .fillMaxSize()
@@ -52,7 +66,38 @@ fun HomePage(navController: NavController) {
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 16.dp)
             )
+            var events by remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
+
+            LaunchedEffect(currentUser) {
+                currentUser?.let { user ->
+                    firestore.collection("users").document(user.uid).collection("events")
+                        .get()
+                        .addOnSuccessListener { result ->
+                            // Filter and map the documents to a Map<LocalDate, List<String>>
+                            val fetchedEvents = result.documents.mapNotNull { doc ->
+                                doc.toObject<Event>()?.let { event ->
+                                    if (event.date.isNotBlank() && event.events.isNotEmpty()) {
+                                        event.date.toLocalDate() to event.events
+                                    } else {
+                                        null
+                                    }
+                                }
+                            }.toMap()
+
+                            // Update the events variable with fetched data
+                            events = fetchedEvents
+                            PastFirebaseEvents.value = fetchedEvents
+                            Log.e("Firebase", "Events added")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firebase", "Error fetching events", e)
+                        }
+                }
+            }
+
             CalendarApp(events)
+            Log.e("Firebase", "Calendar ran $events")
+            Log.e("Firebase", "Past events $PastFirebaseEvents")
         }
 
         // FloatingActionButton at the bottom

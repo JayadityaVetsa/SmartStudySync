@@ -33,7 +33,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun SettingsPage() {
+fun SettingsPage(navController: NavController) {
     val white = Color(0x00FFFFFF)
     var userEmail by remember { mutableStateOf<String?>(null) }
     var userName by remember { mutableStateOf<String?>(null) }
@@ -65,7 +65,6 @@ fun SettingsPage() {
     if (loading) {
         Text(text = "Loading user information...")
     } else {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -118,7 +117,9 @@ fun SettingsPage() {
                     .padding(16.dp)
                     .clickable {
                         FirebaseAuth.getInstance().signOut()
-
+                        navController.navigate("AuthScreen") {
+                            popUpTo("AuthScreen") { inclusive = true }
+                        }
                     }
             ) {
                 Text(
@@ -129,6 +130,4 @@ fun SettingsPage() {
             }
         }
     }
-
-
 }

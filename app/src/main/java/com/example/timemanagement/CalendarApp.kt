@@ -1,5 +1,6 @@
 package com.example.timemanagement
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +32,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.android.gms.maps.model.Circle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,16 +65,27 @@ fun CalendarPreview(){
 
 @Composable
 fun CalendarApp(
-    events: Map<LocalDate, List<String>>,
+    events: Map<LocalDate, List<String>>, // Use non-nullable types
     viewModel: CalendarViewModel = viewModel()
 ) {
-    // Load the passed events into the ViewModel only once
-    LaunchedEffect(Unit) {
-        viewModel.loadEvents(events)
+    val previousEvents = remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
+
+    LaunchedEffect(events) {
+        if (events != previousEvents.value) {
+            previousEvents.value = events
+            viewModel.loadEvents(events)
+        }
     }
 
     val uiState by viewModel.uiState.collectAsState()
     val eventsState by viewModel.events.collectAsState()
+
+    // Load the passed events into the ViewModel only once
+    Log.e("CalendarApp", "Received events: $events")
+    events.forEach { (date, eventList) ->
+        Log.e("CalendarApp", "Date: $date, Events: $eventList")
+        // Render logic for red dots or events
+    }
 
     Scaffold(
         modifier = Modifier
@@ -105,7 +118,7 @@ fun CalendarApp(
                         viewModel.selectDate(selectedDate)
                     }
                 )
-                LazyColumn (modifier = Modifier.heightIn(max = 300.dp).padding(16.dp)) {
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp).padding(16.dp)) {
                     val selectedDate = uiState.selectedDate
                     if (selectedDate != null) {
                         val eventsForSelectedDate = eventsState[selectedDate].orEmpty()
@@ -253,9 +266,11 @@ fun ContentItem(
     onClickListener: (CalendarUiState.Date) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Determine if the current date has any events
     val hasEvents = date.dayOfMonth.toIntOrNull()?.let { day ->
         events.containsKey(LocalDate.of(yearMonth.year, yearMonth.month, day))
     } ?: false
+
     Box(
         modifier = modifier
             .background(
@@ -278,6 +293,7 @@ fun ContentItem(
                 .align(Alignment.Center)
                 .padding(10.dp)
         )
+        // Add a condition to draw the red dot
         if (hasEvents) {
             Box(
                 modifier = Modifier
@@ -287,7 +303,9 @@ fun ContentItem(
             )
         }
     }
+    Log.e("ContentItem", "Date: ${date.dayOfMonth}, hasEvents: $hasEvents")
 }
+
 
 object DateUtil {
     val daysOfWeek: Array<String>
@@ -393,7 +411,7 @@ class CalendarViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(selectedDate = date)
     }
 
-    fun loadEvents(events: Map<LocalDate, List<String>>) {
+    fun loadEvents(events: Map<LocalDate, List<String>>) { // Adjust to non-nullable
         _events.value = events
     }
 }

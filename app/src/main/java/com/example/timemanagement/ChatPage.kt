@@ -1,5 +1,6 @@
 package com.example.timemanagement
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,11 +36,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
-import com.example.timemanagement.ui.theme.ColorModelMessage
-import com.example.timemanagement.ui.theme.ColorUserMessage
 import com.example.timemanagement.ui.theme.Purple80
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate
 
 @Composable
@@ -59,7 +59,6 @@ fun ChatPage(navController: NavController, modifier : Modifier = Modifier, viewM
             }
         )
     }
-
 }
 
 @Composable
@@ -77,8 +76,7 @@ fun MessageList(modifier: Modifier = Modifier, messageList: List<MessageModel>){
                 tint = Purple80
             )
             Text(
-                text = "Hi, I am your personal scheduling assistant that will manage your " +
-                        "time efficiently to ensure productivity. Just paste your schedule " +
+                text = "Hi, I am your personal scheduling assistant. Just paste your schedule " +
                         "for today to get started.",
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center
@@ -97,52 +95,126 @@ fun MessageList(modifier: Modifier = Modifier, messageList: List<MessageModel>){
 }
 
 @Composable
-fun MessageRow (messageModel: MessageModel){
+fun MessageRow(messageModel: MessageModel) {
     var eventsWorks by remember { mutableStateOf(false) }
-    val isModel = messageModel.role=="model"
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ){
-        Box (
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Box (
-                modifier = Modifier
-                    .align(if (isModel) Alignment.BottomStart else Alignment.BottomEnd)
-                    .padding(
-                        start = if (isModel) 8.dp else 60.dp,
-                        end = if (isModel) 60.dp else 8.dp,
-                        top = 8.dp,
-                        bottom = 8.dp
-                    )
-                    .clip(RoundedCornerShape(48f))
-                    .background(if (isModel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary)
-                    .padding(16.dp)
-            ){
-                try {
-                    if (isModel) {
-                        events = parseEvents(messageModel.message)
-                    }
-                    eventsWorks = true
-                } catch (e: Exception) {
-                    Text(
-                        text = messageModel.message,
-                        fontWeight = FontWeight.W500,
-                        color = Color.White
-                    )
-                }
-                if (eventsWorks) {
-                    SelectionContainer {
-                        Text(
-                            text = if (isModel) "Done! Please go to homepage and check your events" else messageModel.message,
-                            fontWeight = FontWeight.W500,
-                            color = Color.White
+    val isModel = messageModel.role == "model"
+    val isUser = messageModel.role == "user"
+
+    if (!messageModel.message.contains("Past events for this user don't forget to add on or modify these")) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(if (isModel) Alignment.BottomStart else Alignment.BottomEnd)
+                        .padding(
+                            start = if (isModel) 8.dp else 60.dp,
+                            end = if (isModel) 60.dp else 8.dp,
+                            top = 8.dp,
+                            bottom = 8.dp
                         )
+                        .clip(RoundedCornerShape(48f))
+                        .background(if (isModel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary)
+                        .padding(16.dp)
+                ) {
+                    if (isModel) {
+                        try {
+                            val betterMessage = messageModel.message.substringAfter("```json\n")
+                            val events = parseEvents(betterMessage.substringBefore("```"))
+                            addToFirebase(events)
+                            eventsWorks = true
+                        } catch (e: Exception) {
+                            eventsWorks = false
+                            Text(
+                                text = messageModel.message,
+                                fontWeight = FontWeight.W500,
+                                color = Color.White
+                            )
+                        }
+
+                        if (eventsWorks) {
+                            SelectionContainer {
+                                Text(
+                                    text = "Done! Please go to homepage and check your events",
+                                    fontWeight = FontWeight.W500,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                    else{
+                        if(!messageModel.message.contains("Past events for this user don't forget to add on or modify these")){
+                            SelectionContainer {
+                                Text(
+                                    text = messageModel.message,
+                                    fontWeight = FontWeight.W500,
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
+}
+
+fun addToFirebase(events: Map<LocalDate, List<String>>) {
+    val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+    val currentUser = auth.currentUser
+
+    val eventsStringMap = events.mapKeys { it.key.toStringFormat() }
+
+    currentUser?.let { user ->
+        val eventsCollection = firestore.collection("users").document(user.uid).collection("events")
+
+        // Step 1: Delete all existing documents in the events collection
+        eventsCollection.get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    eventsCollection.document(document.id).delete()
+                        .addOnSuccessListener {
+                            Log.d("Firebase", "Event deleted successfully")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firebase", "Error deleting event", e)
+                        }
+                }
+
+                // Step 2: Add the new events after deletion
+                eventsStringMap.forEach { (date, events) ->
+                    eventsCollection.add(Event(date, events))
+                        .addOnSuccessListener {
+                            Log.d("Firebase", "Event added successfully")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firebase", "Error adding event", e)
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Error getting documents", e)
+            }
+    }
+}
+
+
+data class Event(
+    val date: String = "", // Provide a default value
+    val events: List<String> = emptyList() // Provide a default value
+)
+
+
+fun LocalDate.toStringFormat(): String {
+    return this.toString() // Convert LocalDate to ISO-8601 string
+}
+
+fun String.toLocalDate(): LocalDate {
+    return LocalDate.parse(this) // Parse ISO-8601 string to LocalDate
 }
 
 @Composable
