@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -162,17 +163,24 @@ fun CalendarWidget(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row {
+        // Display days of the week
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp) // Adjust horizontal padding if needed
+        ) {
             repeat(days.size) {
                 val item = days[it]
-                DayItem(item, modifier = Modifier.weight(1f))
+                DayItem(day = item, modifier = Modifier.weight(1f))
             }
         }
+        // Display calendar header
         Header(
             yearMonth = yearMonth,
             onPreviousMonthButtonClicked = onPreviousMonthButtonClicked,
             onNextMonthButtonClicked = onNextMonthButtonClicked
         )
+        // Display calendar content
         Content(
             dates = dates,
             events = events,
@@ -218,14 +226,18 @@ fun Header(
 
 @Composable
 fun DayItem(day: String, modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier
+            .padding(2.dp) // Adjust padding to ensure that items fit well
+            .fillMaxWidth()
+    ) {
         Text(
             text = day,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(10.dp)
+                .padding(vertical = 8.dp) // Adjust vertical padding if needed
         )
     }
 }
@@ -334,7 +346,7 @@ fun YearMonth.getDisplayName(): String {
 }
 
 class CalendarDataSource {
-    fun getDates(yearMonth: YearMonth): List<CalendarUiState.Date> {
+    fun getDates(yearMonth: YearMonth, selectedDate: LocalDate?): List<CalendarUiState.Date> {
         val firstDayOfMonth = LocalDate.of(yearMonth.year, yearMonth.month, 1)
         val lastDayOfMonth = yearMonth.atEndOfMonth()
         val startOfMonth = firstDayOfMonth.with(DayOfWeek.MONDAY)
@@ -345,7 +357,7 @@ class CalendarDataSource {
             .map { date ->
                 CalendarUiState.Date(
                     dayOfMonth = if (date.month == yearMonth.month) "${date.dayOfMonth}" else "",
-                    isSelected = date.isEqual(LocalDate.now()) && date.month == yearMonth.month
+                    isSelected = date == selectedDate
                 )
             }
             .toList()
@@ -388,30 +400,34 @@ class CalendarViewModel : ViewModel() {
 
     private fun updateDates() {
         val currentMonth = _uiState.value.yearMonth
+        val selectedDate = _uiState.value.selectedDate
         _uiState.value = _uiState.value.copy(
-            dates = dataSource.getDates(currentMonth)
+            dates = dataSource.getDates(currentMonth, selectedDate)
         )
     }
 
     fun toNextMonth(nextMonth: YearMonth) {
+        val selectedDate = _uiState.value.selectedDate
         _uiState.value = _uiState.value.copy(
             yearMonth = nextMonth,
-            dates = dataSource.getDates(nextMonth)
+            dates = dataSource.getDates(nextMonth, selectedDate)
         )
     }
 
     fun toPreviousMonth(prevMonth: YearMonth) {
+        val selectedDate = _uiState.value.selectedDate
         _uiState.value = _uiState.value.copy(
             yearMonth = prevMonth,
-            dates = dataSource.getDates(prevMonth)
+            dates = dataSource.getDates(prevMonth, selectedDate)
         )
     }
 
     fun selectDate(date: LocalDate) {
         _uiState.value = _uiState.value.copy(selectedDate = date)
+        updateDates()
     }
 
-    fun loadEvents(events: Map<LocalDate, List<String>>) { // Adjust to non-nullable
+    fun loadEvents(events: Map<LocalDate, List<String>>) {
         _events.value = events
     }
 }
