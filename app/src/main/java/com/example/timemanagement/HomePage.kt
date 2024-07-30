@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -45,6 +46,36 @@ fun HomePage(navController: NavController) {
     val firestore = FirebaseFirestore.getInstance()
     val currentUser = auth.currentUser
 
+    var events by remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
+    var isLoading by remember { mutableStateOf(true) } // Track loading state
+
+    LaunchedEffect(currentUser) {
+        currentUser?.let { user ->
+            firestore.collection("users").document(user.uid).collection("events")
+                .get()
+                .addOnSuccessListener { result ->
+                    val fetchedEvents = result.documents.mapNotNull { doc ->
+                        doc.toObject<Event>()?.let { event ->
+                            if (event.date.isNotBlank() && event.events.isNotEmpty()) {
+                                event.date.toLocalDate() to event.events
+                            } else {
+                                null
+                            }
+                        }
+                    }.toMap()
+
+                    events = fetchedEvents
+                    PastFirebaseEvents.value = fetchedEvents
+                    isLoading = false // Update loading state
+                    Log.e("Firebase", "Events added")
+                }
+                .addOnFailureListener { e ->
+                    isLoading = false // Update loading state even on failure
+                    Log.e("Firebase", "Error fetching events", e)
+                }
+        }
+    }
+
     Box(
         Modifier
             .fillMaxSize()
@@ -55,7 +86,6 @@ fun HomePage(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // Text at the top with a larger size
             Text(
                 text = "Home Page",
                 style = TextStyle(
@@ -66,41 +96,37 @@ fun HomePage(navController: NavController) {
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 16.dp)
             )
-            var events by remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
 
-            LaunchedEffect(currentUser) {
-                currentUser?.let { user ->
-                    firestore.collection("users").document(user.uid).collection("events")
-                        .get()
-                        .addOnSuccessListener { result ->
-                            // Filter and map the documents to a Map<LocalDate, List<String>>
-                            val fetchedEvents = result.documents.mapNotNull { doc ->
-                                doc.toObject<Event>()?.let { event ->
-                                    if (event.date.isNotBlank() && event.events.isNotEmpty()) {
-                                        event.date.toLocalDate() to event.events
-                                    } else {
-                                        null
-                                    }
-                                }
-                            }.toMap()
-
-                            // Update the events variable with fetched data
-                            events = fetchedEvents
-                            PastFirebaseEvents.value = fetchedEvents
-                            Log.e("Firebase", "Events added")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("Firebase", "Error fetching events", e)
-                        }
+            if (isLoading) {
+                // Center the loading indicator and text using a Box with contentAlignment
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 16.dp), // Optional padding if needed
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally // Center content in column
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Loading...",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(top = 8.dp) // Optional padding
+                        )
+                    }
                 }
+            } else {
+                // Show calendar when not loading
+                CalendarApp(events)
+                Log.e("Firebase", "Calendar ran $events")
+                Log.e("Firebase", "Past events $PastFirebaseEvents")
             }
-
-            CalendarApp(events)
-            Log.e("Firebase", "Calendar ran $events")
-            Log.e("Firebase", "Past events $PastFirebaseEvents")
         }
 
-        // FloatingActionButton at the bottom
         FloatingActionButton(
             onClick = { navController.navigate(Routes.ChatPage) },
             modifier = Modifier
@@ -111,7 +137,6 @@ fun HomePage(navController: NavController) {
         }
     }
 }
-
 
 fun parseEvents(jsonString: String): Map<LocalDate, List<String>> {
     val json = Json { ignoreUnknownKeys = true } // Configure the JSON parser

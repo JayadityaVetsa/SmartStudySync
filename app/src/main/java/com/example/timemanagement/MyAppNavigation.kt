@@ -205,6 +205,9 @@ fun MyAppNavigation(viewModel: ChatViewModel) {
                     val quiz = parseQuiz(response)
                     QuizScreen(quiz, navController)
                 }
+                composable(route = Routes.ContactUs) {
+                    ContactUsPage(navController)
+                }
             }
         )
     }

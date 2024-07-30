@@ -9,4 +9,5 @@ object Routes {
     var SettingsPage = "SettingsPage"
     var QuizScreen = "QuizScreen"
     var AuthScreenSetup = "AuthScreenSetup"
+    var ContactUs = "ContactUs"
 }

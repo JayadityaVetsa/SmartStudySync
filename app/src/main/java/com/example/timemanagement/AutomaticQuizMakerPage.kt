@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,6 +60,7 @@ import kotlin.math.roundToInt
 fun AutomaticQuizMakerPage(navController: NavController) {
     val scrollStateGemini = rememberScrollState()
     var quizzes by remember { mutableStateOf(listOf<QuizData>()) }
+    var isLoading by remember { mutableStateOf(true) } // State to track loading
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
     val currentUser = auth.currentUser
@@ -71,24 +74,41 @@ fun AutomaticQuizMakerPage(navController: NavController) {
                         doc.toObject<QuizData>()?.apply { documentId = doc.id } ?: QuizData()
                     }
                     quizzes = quizList
+                    isLoading = false // Set loading to false once data is fetched
                 }
                 .addOnFailureListener { e ->
                     Log.e("Firebase", "Error fetching quizzes", e)
+                    isLoading = false // Set loading to false even on failure
                 }
+        } ?: run {
+            isLoading = false // Set loading to false if no user is logged in
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollStateGemini)
-        ) {
-            AppHeader("Automatic Quiz Maker")
-            Spacer(modifier = Modifier.padding(8.dp))
+        if (isLoading) {
+            // Show a loading indicator with "Loading..." text
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Loading...")
+            }
+        } else {
+            // Display the quiz list
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollStateGemini)
+            ) {
+                AppHeader("Automatic Quiz Maker")
+                Spacer(modifier = Modifier.padding(8.dp))
 
-            quizzes.forEach { quiz ->
-                SwipeToDismissQuizItem(quiz, navController, firestore, currentUser)
+                quizzes.forEach { quiz ->
+                    SwipeToDismissQuizItem(quiz, navController, firestore, currentUser)
+                }
             }
         }
 
@@ -102,6 +122,7 @@ fun AutomaticQuizMakerPage(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun SwipeToDismissQuizItem(quiz: QuizData, navController: NavController, firestore: FirebaseFirestore, user: FirebaseUser?) {
@@ -158,7 +179,6 @@ fun SwipeToDismissQuizItem(quiz: QuizData, navController: NavController, firesto
         }
     }
 }
-
 
 fun Modifier.swipeToDismiss(
     onDismissed: () -> Unit

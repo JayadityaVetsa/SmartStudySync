@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,7 +67,7 @@ fun CalendarPreview(){
 
 @Composable
 fun CalendarApp(
-    events: Map<LocalDate, List<String>>, // Use non-nullable types
+    events: Map<LocalDate, List<String>>,
     viewModel: CalendarViewModel = viewModel()
 ) {
     val previousEvents = remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
@@ -81,24 +82,13 @@ fun CalendarApp(
     val uiState by viewModel.uiState.collectAsState()
     val eventsState by viewModel.events.collectAsState()
 
-    // Load the passed events into the ViewModel only once
-    Log.e("CalendarApp", "Received events: $events")
-    events.forEach { (date, eventList) ->
-        Log.e("CalendarApp", "Date: $date, Events: $eventList")
-        // Render logic for red dots or events
-    }
-
-    Scaffold(
-        modifier = Modifier
-    ) { padding ->
+    Scaffold { padding ->
         Surface(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(padding)
         ) {
-            Column(
-                modifier = Modifier
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 CalendarWidget(
                     days = DateUtil.daysOfWeek,
                     yearMonth = uiState.yearMonth,
@@ -119,32 +109,70 @@ fun CalendarApp(
                         viewModel.selectDate(selectedDate)
                     }
                 )
-                LazyColumn(modifier = Modifier.heightIn(max = 300.dp).padding(16.dp)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
                     val selectedDate = uiState.selectedDate
                     if (selectedDate != null) {
                         val eventsForSelectedDate = eventsState[selectedDate].orEmpty()
                         if (eventsForSelectedDate.isEmpty()) {
                             item {
                                 Box(
-                                    modifier = Modifier.fillParentMaxSize(),
+                                    modifier = Modifier
+                                        .fillParentMaxSize()
+                                        .padding(16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Click the plus icon to add events")
+                                    Text(
+                                        "Click the plus icon to add events",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
                                 }
                             }
                         } else {
                             items(eventsForSelectedDate) { event ->
-                                Text(event, modifier = Modifier.padding(8.dp))
+                                EventCard(event = event)
                             }
                         }
                     } else {
                         item {
-                            Text("No date selected", modifier = Modifier.padding(8.dp))
+                            Text(
+                                "No date selected",
+                                modifier = Modifier
+                                    .fillParentMaxSize()
+                                    .padding(16.dp),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun EventCard(event: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Text(
+            text = event,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.CenterHorizontally)
+        )
     }
 }
 
@@ -161,26 +189,23 @@ fun CalendarWidget(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(8.dp) // Reduced padding for the entire widget
     ) {
-        // Display days of the week
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp) // Adjust horizontal padding if needed
+                .padding(horizontal = 4.dp) // Adjust padding for day headers
         ) {
             repeat(days.size) {
                 val item = days[it]
                 DayItem(day = item, modifier = Modifier.weight(1f))
             }
         }
-        // Display calendar header
         Header(
             yearMonth = yearMonth,
             onPreviousMonthButtonClicked = onPreviousMonthButtonClicked,
             onNextMonthButtonClicked = onNextMonthButtonClicked
         )
-        // Display calendar content
         Content(
             dates = dates,
             events = events,
@@ -228,7 +253,7 @@ fun Header(
 fun DayItem(day: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(2.dp) // Adjust padding to ensure that items fit well
+            .padding(0.dp) // Remove padding to fit day items properly
             .fillMaxWidth()
     ) {
         Text(
@@ -237,7 +262,7 @@ fun DayItem(day: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(vertical = 8.dp) // Adjust vertical padding if needed
+                .padding(vertical = 4.dp) // Reduced vertical padding
         )
     }
 }
@@ -278,7 +303,6 @@ fun ContentItem(
     onClickListener: (CalendarUiState.Date) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Determine if the current date has any events
     val hasEvents = date.dayOfMonth.toIntOrNull()?.let { day ->
         events.containsKey(LocalDate.of(yearMonth.year, yearMonth.month, day))
     } ?: false
@@ -305,19 +329,17 @@ fun ContentItem(
                 .align(Alignment.Center)
                 .padding(10.dp)
         )
-        // Add a condition to draw the red dot
         if (hasEvents) {
             Box(
                 modifier = Modifier
                     .size(8.dp)
-                    .background(Color.Red)
+                    .background(Color.Red, shape = MaterialTheme.shapes.small)
                     .align(Alignment.BottomCenter)
             )
         }
     }
     Log.e("ContentItem", "Date: ${date.dayOfMonth}, hasEvents: $hasEvents")
 }
-
 
 object DateUtil {
     val daysOfWeek: Array<String>
