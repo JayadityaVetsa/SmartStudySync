@@ -243,9 +243,12 @@ fun MessageInput(onMessageSend : (String)-> Unit) {
         modifier = Modifier.padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        OutlinedTextField(
+            OutlinedTextField(
             modifier = Modifier.weight(1f),
             value = message,
+            placeholder = {
+                Text(text = "Type your message here")
+            },
             onValueChange = {
                 message = it
             }
