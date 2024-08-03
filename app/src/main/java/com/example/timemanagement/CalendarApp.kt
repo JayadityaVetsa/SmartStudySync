@@ -45,34 +45,12 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.*
 
-@Preview
-@Composable
-fun CalendarPreview(){
-    val sampleEvents = mapOf(
-        LocalDate.of(2024, 6, 19) to listOf(
-            "Meeting with Bob",
-            "Dentist appointment"
-        ),
-        LocalDate.of(2024, 6, 20) to listOf(
-            "Project deadline"
-        ),
-        LocalDate.of(2024, 6, 25) to listOf(
-            "Team lunch",
-            "Presentation"
-        ),
-        LocalDate.of(2024, 7, 1) to listOf(
-            "Monthly review meeting"
-        )
-    )
-    CalendarApp(sampleEvents)
-}
-
 @Composable
 fun CalendarApp(
-    events: Map<LocalDate, List<String>>,
+    events: Map<LocalDate, List<SingleEvent>>,
     viewModel: CalendarViewModel = viewModel()
 ) {
-    val previousEvents = remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
+    val previousEvents = remember { mutableStateOf<Map<LocalDate, List<SingleEvent>>>(emptyMap()) }
 
     LaunchedEffect(events) {
         if (events != previousEvents.value) {
@@ -158,7 +136,7 @@ fun CalendarApp(
 }
 
 @Composable
-fun EventCard(event: String) {
+fun EventCard(event: SingleEvent) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -166,13 +144,20 @@ fun EventCard(event: String) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
-        Text(
-            text = event,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.CenterHorizontally)
-        )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = event.time+" : ",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 4.dp)
+            )
+            Text(
+                text = event.event,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.Start)
+            )
+        }
     }
 }
 
@@ -181,7 +166,7 @@ fun CalendarWidget(
     days: Array<String>,
     yearMonth: YearMonth,
     dates: List<CalendarUiState.Date>,
-    events: Map<LocalDate, List<String>>,
+    events: Map<LocalDate, List<SingleEvent>>,
     onPreviousMonthButtonClicked: (YearMonth) -> Unit,
     onNextMonthButtonClicked: (YearMonth) -> Unit,
     onDateClickListener: (CalendarUiState.Date) -> Unit,
@@ -270,7 +255,7 @@ fun DayItem(day: String, modifier: Modifier = Modifier) {
 @Composable
 fun Content(
     dates: List<CalendarUiState.Date>,
-    events: Map<LocalDate, List<String>>,
+    events: Map<LocalDate, List<SingleEvent>>,
     yearMonth: YearMonth,
     onDateClickListener: (CalendarUiState.Date) -> Unit,
 ) {
@@ -298,7 +283,7 @@ fun Content(
 @Composable
 fun ContentItem(
     date: CalendarUiState.Date,
-    events: Map<LocalDate, List<String>>,
+    events: Map<LocalDate, List<SingleEvent>>,
     yearMonth: YearMonth,
     onClickListener: (CalendarUiState.Date) -> Unit,
     modifier: Modifier = Modifier
@@ -415,8 +400,8 @@ class CalendarViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState.Init)
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
-    private val _events = MutableStateFlow<Map<LocalDate, List<String>>>(emptyMap())
-    val events: StateFlow<Map<LocalDate, List<String>>> = _events.asStateFlow()
+    private val _events = MutableStateFlow<Map<LocalDate, List<SingleEvent>>>(emptyMap())
+    val events: StateFlow<Map<LocalDate, List<SingleEvent>>> = _events.asStateFlow()
 
     init {
         updateDates()
@@ -451,7 +436,7 @@ class CalendarViewModel : ViewModel() {
         updateDates()
     }
 
-    fun loadEvents(events: Map<LocalDate, List<String>>) {
+    fun loadEvents(events: Map<LocalDate, List<SingleEvent>>) {
         _events.value = events
     }
 }

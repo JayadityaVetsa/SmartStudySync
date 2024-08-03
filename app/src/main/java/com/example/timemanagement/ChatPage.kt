@@ -98,7 +98,6 @@ fun MessageList(modifier: Modifier = Modifier, messageList: List<MessageModel>){
 fun MessageRow(messageModel: MessageModel) {
     var eventsWorks by remember { mutableStateOf(false) }
     val isModel = messageModel.role == "model"
-    val isUser = messageModel.role == "user"
 
     if (!messageModel.message.contains("Past events for this user don't forget to add on or modify these")) {
         Row(
@@ -122,8 +121,12 @@ fun MessageRow(messageModel: MessageModel) {
                 ) {
                     if (isModel) {
                         try {
+                            // Extract JSON from the message
                             val betterMessage = messageModel.message.substringAfter("```json\n")
-                            val events = parseEvents(betterMessage.substringBefore("```"))
+                            val eventsJson = betterMessage.substringBefore("```")
+                            // Parse the JSON string
+                            val events = parseEvents(eventsJson)
+                            // Add parsed events to Firebase
                             addToFirebase(events)
                             eventsWorks = true
                         } catch (e: Exception) {
@@ -144,9 +147,8 @@ fun MessageRow(messageModel: MessageModel) {
                                 )
                             }
                         }
-                    }
-                    else{
-                        if(!messageModel.message.contains("Past events for this user don't forget to add on or modify these")){
+                    } else {
+                        if (!messageModel.message.contains("Past events for this user don't forget to add on or modify these")) {
                             SelectionContainer {
                                 Text(
                                     text = messageModel.message,
@@ -162,12 +164,10 @@ fun MessageRow(messageModel: MessageModel) {
     }
 }
 
-fun addToFirebase(events: Map<LocalDate, List<String>>) {
+fun addToFirebase(events: Map<LocalDate, List<SingleEvent>>) {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
     val currentUser = auth.currentUser
-
-    val eventsStringMap = events.mapKeys { it.key.toStringFormat() }
 
     currentUser?.let { user ->
         val eventsCollection = firestore.collection("users").document(user.uid).collection("events")
@@ -186,8 +186,18 @@ fun addToFirebase(events: Map<LocalDate, List<String>>) {
                 }
 
                 // Step 2: Add the new events after deletion
-                eventsStringMap.forEach { (date, events) ->
-                    eventsCollection.add(Event(date, events))
+                events.forEach { (date, singleEvents) ->
+                    // Create a document with the date as ID and a list of maps for the events
+                    val eventList = singleEvents.map { event ->
+                        mapOf("time" to event.time, "event" to event.event)
+                    }
+                    val eventData = hashMapOf(
+                        "year" to date.year,
+                        "month" to date.monthValue,
+                        "day" to date.dayOfMonth,
+                        "events" to eventList
+                    )
+                    eventsCollection.add(eventData)
                         .addOnSuccessListener {
                             Log.d("Firebase", "Event added successfully")
                         }
@@ -200,21 +210,6 @@ fun addToFirebase(events: Map<LocalDate, List<String>>) {
                 Log.e("Firebase", "Error getting documents", e)
             }
     }
-}
-
-
-data class Event(
-    val date: String = "", // Provide a default value
-    val events: List<String> = emptyList() // Provide a default value
-)
-
-
-fun LocalDate.toStringFormat(): String {
-    return this.toString() // Convert LocalDate to ISO-8601 string
-}
-
-fun String.toLocalDate(): LocalDate {
-    return LocalDate.parse(this) // Parse ISO-8601 string to LocalDate
 }
 
 @Composable

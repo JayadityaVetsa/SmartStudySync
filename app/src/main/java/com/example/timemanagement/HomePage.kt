@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,11 +30,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 var HomePageJSONResponse = ""
 
@@ -46,7 +43,8 @@ fun HomePage(navController: NavController) {
     val firestore = FirebaseFirestore.getInstance()
     val currentUser = auth.currentUser
 
-    var events by remember { mutableStateOf<Map<LocalDate, List<String>>>(emptyMap()) }
+    // Change the type to Map<LocalDate, List<SingleEvent>>
+    var events by remember { mutableStateOf<Map<LocalDate, List<SingleEvent>>>(emptyMap()) }
     var isLoading by remember { mutableStateOf(true) } // Track loading state
 
     LaunchedEffect(currentUser) {
@@ -55,17 +53,31 @@ fun HomePage(navController: NavController) {
                 .get()
                 .addOnSuccessListener { result ->
                     val fetchedEvents = result.documents.mapNotNull { doc ->
-                        doc.toObject<Event>()?.let { event ->
-                            if (event.date.isNotBlank() && event.events.isNotEmpty()) {
-                                event.date.toLocalDate() to event.events
-                            } else {
-                                null
+                        val year = doc.getLong("year")?.toInt()
+                        val month = doc.getLong("month")?.toInt()
+                        val day = doc.getLong("day")?.toInt()
+                        val events = doc.get("events") as? List<Map<String, String>>
+
+                        if (year != null && month != null && day != null && events != null) {
+                            val localDate = LocalDate.of(year, month, day)
+                            val eventList = events.mapNotNull { eventMap ->
+                                val time = eventMap["time"]
+                                val event = eventMap["event"]
+                                if (time != null && event != null) {
+                                    SingleEvent(time, event) // Create a SingleEvent instance
+                                } else {
+                                    null
+                                }
                             }
+                            localDate to eventList
+                        } else {
+                            null
                         }
                     }.toMap()
 
+                    // Update the state with the correctly typed events
                     events = fetchedEvents
-                    PastFirebaseEvents.value = fetchedEvents
+                    PastFirebaseEvents.value = fetchedEvents // Update here
                     isLoading = false // Update loading state
                     Log.e("Firebase", "Events added")
                 }
@@ -138,11 +150,13 @@ fun HomePage(navController: NavController) {
     }
 }
 
-fun parseEvents(jsonString: String): Map<LocalDate, List<String>> {
+
+
+fun parseEvents(jsonString: String): Map<LocalDate, List<SingleEvent>> {
     val json = Json { ignoreUnknownKeys = true } // Configure the JSON parser
     val eventDays = json.decodeFromString<List<EventDay>>(jsonString)
 
-    val eventsMap = mutableMapOf<LocalDate, List<String>>()
+    val eventsMap = mutableMapOf<LocalDate, List<SingleEvent>>()
 
     for (eventDay in eventDays) {
         val date = LocalDate.of(eventDay.year, eventDay.month, eventDay.day)
@@ -157,8 +171,16 @@ data class EventDay(
     val year: Int,
     val month: Int,
     val day: Int,
-    val events: List<String>
+    val events: List<SingleEvent>
 )
+
+@Serializable
+data class SingleEvent(
+    val time: String,
+    val event: String
+)
+
+
 
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
