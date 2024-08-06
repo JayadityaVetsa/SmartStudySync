@@ -133,7 +133,7 @@ fun SwipeToDismissQuizItem(quiz: QuizData, navController: NavController, firesto
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 2.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.LightGray)
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .clickable { navController.navigate("QuizScreen/${quiz.response}") }
                 .swipeToDismiss {
                     isDismissed = true

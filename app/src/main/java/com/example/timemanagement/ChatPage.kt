@@ -64,13 +64,13 @@ fun ChatPage(navController: NavController, modifier : Modifier = Modifier, viewM
 @Composable
 fun MessageList(modifier: Modifier = Modifier, messageList: List<MessageModel>){
     if (messageList.isEmpty()){
-        Column (
+        Column(
             modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
-        ){
+        ) {
             Icon(
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(80.dp),
                 painter = painterResource(id = R.drawable.baseline_question_answer_24),
                 contentDescription = "Icon",
                 tint = Purple80
@@ -78,8 +78,11 @@ fun MessageList(modifier: Modifier = Modifier, messageList: List<MessageModel>){
             Text(
                 text = "Hi, I am your personal scheduling assistant. Just paste your schedule " +
                         "for today to get started.",
-                fontSize = 10.sp,
-                textAlign = TextAlign.Center
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(16.dp)
             )
         }
     }else{

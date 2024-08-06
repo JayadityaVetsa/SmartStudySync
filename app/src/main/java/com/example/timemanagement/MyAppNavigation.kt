@@ -26,7 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.example.timemanagement.ui.theme.lightWhite
+import com.example.timemanagement.ui.theme.lightPrimaryColor
 
 
 @Composable
@@ -104,7 +104,7 @@ fun MyAppNavigation(viewModel: ChatViewModel) {
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = lightWhite
+                            indicatorColor = lightPrimaryColor
                         )
                     )
 
@@ -125,7 +125,7 @@ fun MyAppNavigation(viewModel: ChatViewModel) {
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = lightWhite
+                            indicatorColor = lightPrimaryColor
                         )
                     )
 
@@ -146,7 +146,7 @@ fun MyAppNavigation(viewModel: ChatViewModel) {
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = lightWhite
+                            indicatorColor = lightPrimaryColor
                         )
                     )
 
@@ -167,7 +167,7 @@ fun MyAppNavigation(viewModel: ChatViewModel) {
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = lightWhite
+                            indicatorColor = lightPrimaryColor
                         )
                     )
                 }

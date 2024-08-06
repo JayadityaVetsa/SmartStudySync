@@ -125,6 +125,26 @@ fun SettingsPage(navController: NavController) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Contact Us Button
+                    Button(
+                        onClick = {
+                            navController.navigate(Routes.ContactUs)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .height(50.dp)
+                    ) {
+                        Text(
+                            text = "Contact Us",
+                            color = white,
+                            fontSize = 18.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Log Out Button
                     Button(
                         onClick = {
@@ -141,26 +161,6 @@ fun SettingsPage(navController: NavController) {
                     ) {
                         Text(
                             text = "Log out",
-                            color = white,
-                            fontSize = 18.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Contact Us Button
-                    Button(
-                        onClick = {
-                            navController.navigate(Routes.ContactUs)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .height(50.dp)
-                    ) {
-                        Text(
-                            text = "Contact Us",
                             color = white,
                             fontSize = 18.sp
                         )
@@ -220,6 +220,19 @@ fun ContactUsPage(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Made By Section
+        Text(
+            text = "Made by: Jayaditya Vetsa and Sai Venkat Veerapaneni",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 16.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.weight(1f)) // Pushes the back button down
 
         // Back Button
         Button(
